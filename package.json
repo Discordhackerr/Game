@@ -2,9 +2,9 @@
   "name": "LucasEM's very cozy game",
   "version": "1.0.0",
   "description": "LucasEM's cozy game!! play",
-  "main": "server/app.js",
+  "main": "app.js",
   "scripts": {
-    "start": "node server/app.js"
+    "start": "node app.js"
   },
   "dependencies": {
     "express": "^4.17.1"
